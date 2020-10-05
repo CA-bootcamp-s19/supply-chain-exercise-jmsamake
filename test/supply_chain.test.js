@@ -29,7 +29,7 @@ contract('SupplyChain', function(accounts) {
         instance = await SupplyChain.new()
     })
 
-    it("should add an item with the provided name and price", async() => {
+    it("T1::should add an item with the provided name and price", async() => {
         const tx = await instance.addItem(name, price, {from: alice})
                 
         const result = await instance.fetchItem.call(0)
@@ -41,7 +41,7 @@ contract('SupplyChain', function(accounts) {
         assert.equal(result[5], emptyAddress, 'the buyer address should be set to 0 when an item is added')
     })
 
-    it("should emit a LogForSale event when an item is added", async()=> {
+    it("T2::should emit a LogForSale event when an item is added", async()=> {
         let eventEmitted = false
         const tx = await instance.addItem(name, price, {from: alice})
         
@@ -52,9 +52,10 @@ contract('SupplyChain', function(accounts) {
         assert.equal(eventEmitted, true, 'adding an item should emit a For Sale event')
     })
 
-    it("should allow someone to purchase an item and update state accordingly", async() => {
+    it("T3::should allow someone to purchase an item and update state accordingly", async() => {
 
         await instance.addItem(name, price, {from: alice})
+		// get eth balance
         var aliceBalanceBefore = await web3.eth.getBalance(alice)
         var bobBalanceBefore = await web3.eth.getBalance(bob)
 
@@ -62,7 +63,7 @@ contract('SupplyChain', function(accounts) {
 
         var aliceBalanceAfter = await web3.eth.getBalance(alice)
         var bobBalanceAfter = await web3.eth.getBalance(bob)
-
+		// fetch 1st item
         const result = await instance.fetchItem.call(0)
 
         assert.equal(result[3].toString(10), 1, 'the state of the item should be "Sold", which should be declared second in the State Enum')
@@ -71,12 +72,12 @@ contract('SupplyChain', function(accounts) {
         assert.isBelow(Number(bobBalanceAfter), Number(new BN(bobBalanceBefore).sub(new BN(price))), "bob's balance should be reduced by more than the price of the item (including gas costs)")
     })
 
-    it("should error when not enough value is sent when purchasing an item", async()=>{
+    it("T4::should error when not enough value is sent when purchasing an item", async()=>{
         await instance.addItem(name, price, {from: alice})
         await catchRevert(instance.buyItem(0, {from: bob, value: 1}))
     })
 
-    it("should emit LogSold event when and item is purchased", async()=>{
+    it("T5::should emit LogSold event when and item is purchased", async()=>{
         var eventEmitted = false
 
         await instance.addItem(name, price, {from: alice})
@@ -89,13 +90,13 @@ contract('SupplyChain', function(accounts) {
         assert.equal(eventEmitted, true, 'adding an item should emit a Sold event')
     })
 
-    it("should revert when someone that is not the seller tries to call shipItem()", async()=>{
+    it("T6::should revert when someone that is not the seller tries to call shipItem()", async()=>{
         await instance.addItem(name, price, {from: alice})
         await instance.buyItem(0, {from: bob, value: price})
         await catchRevert(instance.shipItem(0, {from: bob}))
     })
 
-    it("should allow the seller to mark the item as shipped", async() => {
+    it("T7::should allow the seller to mark the item as shipped", async() => {
 
         await instance.addItem(name, price, {from: alice})
         await instance.buyItem(0, {from: bob, value: excessAmount})
@@ -106,7 +107,7 @@ contract('SupplyChain', function(accounts) {
         assert.equal(result[3].toString(10), 2, 'the state of the item should be "Shipped", which should be declared third in the State Enum')
     })
 
-    it("should emit a LogShipped event when an item is shipped", async() => {
+    it("T8::should emit a LogShipped event when an item is shipped", async() => {
         var eventEmitted = false
 
         await instance.addItem(name, price, {from: alice})
@@ -120,7 +121,7 @@ contract('SupplyChain', function(accounts) {
         assert.equal(eventEmitted, true, 'adding an item should emit a Shipped event')
     })
 
-    it("should allow the buyer to mark the item as received", async() => {
+    it("T9::should allow the buyer to mark the item as received", async() => {
         await instance.addItem(name, price, {from: alice})
         await instance.buyItem(0, {from: bob, value: excessAmount})
         await instance.shipItem(0, {from: alice})
@@ -131,7 +132,7 @@ contract('SupplyChain', function(accounts) {
         assert.equal(result[3].toString(10), 3, 'the state of the item should be "Received", which should be declared fourth in the State Enum')
     })
 
-    it("should revert if an address other than the buyer calls receiveItem()", async() =>{
+    it("T10::should revert if an address other than the buyer calls receiveItem()", async() =>{
         await instance.addItem(name, price, {from: alice})
         await instance.buyItem(0, {from: bob, value: excessAmount})
         await instance.shipItem(0, {from: alice})
@@ -139,7 +140,7 @@ contract('SupplyChain', function(accounts) {
         await catchRevert(instance.receiveItem(0, {from: alice}))
     })
 
-    it("should emit a LogReceived event when an item is received", async() => {
+    it("T11::should emit a LogReceived event when an item is received", async() => {
         var eventEmitted = false
 
         await instance.addItem(name, price, {from: alice})
